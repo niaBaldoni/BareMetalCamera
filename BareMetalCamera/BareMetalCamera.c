@@ -114,6 +114,18 @@ int main() {
 
     test_chip_id();
 
+    printf("Testing register write...\n");
+    camera_write_reg(0x4300, 0x60);  // Set RGB565 format
+    printf("Format register set to RGB565!\n");
+    uint8_t format = camera_read_reg(0x4300);
+
+    if (format == 0x60) {
+        printf("Confirmed: format register set to RGB565!\n");
+    } else {
+        printf("Something went wrong: format register is NOT set to RGB565.\n");
+    }
+
+    printf("All done! Looping forever...\n");
     while (1) {
         sleep_ms(1000);
     }
