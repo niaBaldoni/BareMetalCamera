@@ -22,9 +22,6 @@
 #define PIN_RST         14
 #define PIN_PWDN        15
 
-// OV5640 SCCB address
-#define OV5640_ADDR 0x3C
-
 // OV5640 ID registers
 #define OV5640_CHIP_ID_HIGH 0x300A
 #define OV5640_CHIP_ID_LOW  0x300B
@@ -34,20 +31,22 @@
 void init_xclk() {
     gpio_set_function(PIN_XCLK, GPIO_FUNC_PWM);
 
-    uint slice = pwm_gpio_to_slice_num(gpio);
-    uint channel = pwm_gpio_to_channel(gpio);
+    uint slice = pwm_gpio_to_slice_num(PIN_XCLK);
+    uint channel = pwm_gpio_to_channel(PIN_XCLK);
 
     pwm_set_clkdiv(slice, 1.0f);   // system clock (125 MHz)
     pwm_set_wrap(slice, 1);        // divide by 2 -> ~62.5 MHz / 2 ≈ 31 MHz CHECK THIS
     pwm_set_chan_level(slice, channel, 1);
 
     pwm_set_enabled(slice, true);
+    sleep_ms(20);
 }
 
 void init_i2c() {
     i2c_init(i2c0, 100 * 1000); // 100kHz -> CHECK THIS
     gpio_set_function(PIN_SCCB_SDA, GPIO_FUNC_I2C);
     gpio_set_function(PIN_SCCB_SCL, GPIO_FUNC_I2C);
+    sleep_ms(20);
 }
 
 void init_camera_power() {
@@ -61,7 +60,41 @@ void init_camera_power() {
     gpio_set_dir(PIN_PWDN, GPIO_OUT);
     gpio_put(PIN_PWDN, 0);
     
-    sleep_ms(20);  // Let camera wake up
+    sleep_ms(20);
+}
+
+// === READ & WRITE REGISTERS ===
+
+void camera_write_reg(uint16_t reg, uint8_t value) {
+    uint8_t data[3];
+    data[0] = (reg >> 8) & 0xFF;  // High byte
+    data[1] = reg & 0xFF;         // Low byte  
+    data[2] = value;
+    i2c_write_blocking(i2c0, 0x3C, data, 3, false);
+}
+
+uint8_t camera_read_reg(uint16_t reg) {
+    uint8_t addr[2];
+    addr[0] = (reg >> 8) & 0xFF;
+    addr[1] = reg & 0xFF;
+    
+    uint8_t value;
+    i2c_write_blocking(i2c0, 0x3C, addr, 2, true);   // Keep control
+    i2c_read_blocking(i2c0, 0x3C, &value, 1, false);
+    return value;
+}
+
+// === TESTS ===
+
+void test_chip_id() {
+    uint8_t id_high = camera_read_reg(0x300A);
+    uint8_t id_low = camera_read_reg(0x300B);
+    
+    if (id_high == 0x56 && id_low == 0x40) {
+        printf("OV5640 detected!\n");
+    } else {
+        printf("Wrong chip ID!\n");
+    }
 }
 
 // === MAIN ===
@@ -72,10 +105,14 @@ int main() {
     // Give USB time to connect
     sleep_ms(5000);
 
-    // 
     init_camera_power();
     init_xclk();
-    sleep_ms(10);
+    printf("XCLK started!\n");
+
+    init_i2c();
+    printf("I2C ready!\n");
+
+    test_chip_id();
 
     while (1) {
         sleep_ms(1000);
