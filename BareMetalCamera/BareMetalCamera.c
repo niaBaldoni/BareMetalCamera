@@ -49,19 +49,32 @@ void init_i2c() {
     sleep_ms(20);
 }
 
-void init_camera_power() {
-    // RESET is active LOW - set HIGH for normal operation
-    gpio_init(PIN_RST);
-    gpio_set_dir(PIN_RST, GPIO_OUT);
-    gpio_put(PIN_RST, 1);
-    
-    // PWDN is active HIGH - set LOW for normal operation
+void camera_set_power(bool enable) {
     gpio_init(PIN_PWDN);
     gpio_set_dir(PIN_PWDN, GPIO_OUT);
-    gpio_put(PIN_PWDN, 0);
-    
-    sleep_ms(20);
+
+    if (enable) {
+        gpio_put(PIN_PWDN, 0);  // normal operation
+    } else {
+        gpio_put(PIN_PWDN, 1);  // power-down
+    }
+
+    sleep_ms(5);
 }
+
+void camera_hard_reset(void) {
+    gpio_init(PIN_RST);
+    gpio_set_dir(PIN_RST, GPIO_OUT);
+
+    // Assert reset (active low)
+    gpio_put(PIN_RST, 0);
+    sleep_ms(2);   // datasheet: ≥1ms
+
+    // Deassert reset
+    gpio_put(PIN_RST, 1);
+    sleep_ms(20);  // allow internal circuits to stabilize
+}
+
 
 // === READ & WRITE REGISTERS ===
 
@@ -84,6 +97,22 @@ uint8_t camera_read_reg(uint16_t reg) {
     return value;
 }
 
+// === CAMERA CONFIG ===
+
+void camera_basic_init() {
+    camera_write_reg(0x3008, 0b10000010); // reset
+    sleep_ms(10);
+    camera_write_reg(0x3008, 0b01000010); // power down
+    // bit[7]:  software reset
+    // bit[6]:  software power down
+    // bit[5:0] debug mode (but bit[1] default = 1)
+
+
+    // SET ALL THE REGISTERS
+
+    camera_write_reg(0x3008, 0b00000010); // normal operations
+}
+
 // === TESTS ===
 
 void test_chip_id() {
@@ -97,23 +126,7 @@ void test_chip_id() {
     }
 }
 
-// === MAIN ===
-
-int main() {
-    stdio_init_all();
-
-    // Give USB time to connect
-    sleep_ms(5000);
-
-    init_camera_power();
-    init_xclk();
-    printf("XCLK started!\n");
-
-    init_i2c();
-    printf("I2C ready!\n");
-
-    test_chip_id();
-
+void test_reg_write() {
     printf("Testing register write...\n");
     camera_write_reg(0x4300, 0x60);  // Set RGB565 format
     printf("Format register set to RGB565!\n");
@@ -124,6 +137,26 @@ int main() {
     } else {
         printf("Something went wrong: format register is NOT set to RGB565.\n");
     }
+}
+
+// === MAIN ===
+
+int main() {
+    stdio_init_all();
+
+    // Give USB time to connect
+    sleep_ms(5000);
+
+    camera_set_power(true);
+    init_xclk();
+
+    camera_hard_reset();
+
+    init_i2c();
+
+    test_chip_id();
+
+    
 
     printf("All done! Looping forever...\n");
     while (1) {
