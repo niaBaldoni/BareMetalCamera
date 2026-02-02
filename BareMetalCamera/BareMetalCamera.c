@@ -3,14 +3,24 @@
 #include "hardware/i2c.h"
 #include "hardware/pwm.h"
 
-// #define I2C_PORT i2c0
-#define I2C_SDA_PIN 12
-#define I2C_SCL_PIN 13
+// === PIN DEFINITIONS ===
 
-#define CLK         11
-
-#define PIN_RST     14
-#define PIN_PWDN    15
+#define PIN_D2          0
+#define PIN_D3          1
+#define PIN_D4          2
+#define PIN_D5          3
+#define PIN_D6          4
+#define PIN_D7          5
+#define PIN_D8          6
+#define PIN_D9          7
+#define PIN_PCLK        8
+#define PIN_VSYNC       9
+#define PIN_HREF        10
+#define PIN_XCLK        11
+#define PIN_SCCB_SDA    12
+#define PIN_SCCB_SCL    13
+#define PIN_RST         14
+#define PIN_PWDN        15
 
 // OV5640 SCCB address
 #define OV5640_ADDR 0x3C
