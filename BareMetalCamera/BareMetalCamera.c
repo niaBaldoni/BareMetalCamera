@@ -92,11 +92,11 @@ int main() {
     printf("OV5640 SCCB test\n");
 
     uint8_t cidh = ov5640_read_reg(ptrI2c, OV5640_CHIP_ID_HIGH);
-    uint8_t cidh = ov5640_read_reg(ptrI2c, OV5640_CHIP_ID_LOW);
+    uint8_t cidl = ov5640_read_reg(ptrI2c, OV5640_CHIP_ID_LOW);
 
-    printf("Chip ID High Byte: 0x%02X\n", pidh);
-    printf("Chip ID Low Byte: 0x%02X\n", pidl);
-    printf("Chip ID: 0x%02X%02X\n", pidh, pidl);
+    printf("Chip ID High Byte: 0x%02X\n", cidh);
+    printf("Chip ID Low Byte: 0x%02X\n", cidl);
+    printf("Chip ID: 0x%02X%02X\n", cidh, cidl);
 
     while (1) {
         sleep_ms(1000);
