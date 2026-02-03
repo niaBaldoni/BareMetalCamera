@@ -2,6 +2,7 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include "hardware/pwm.h"
+#include "ov5640_regs.h"
 
 // === PIN DEFINITIONS ===
 
@@ -13,18 +14,20 @@
 #define CAM_D7          5
 #define CAM_D8          6
 #define CAM_D9          7
+
 #define CAM_PCLK        8
 #define CAM_VSYNC       9
 #define CAM_HREF        10
+
 #define CAM_XCLK        11
+
 #define CAM_SCCB_SDA    12
 #define CAM_SCCB_SCL    13
+
 #define CAM_RST         14
 #define CAM_PWDN        15
 
-// OV5640 ID registers
-#define OV5640_CHIP_ID_HIGH 0x300A
-#define OV5640_CHIP_ID_LOW  0x300B
+
 
 // === INITS ===
 
@@ -113,21 +116,25 @@ uint8_t camera_read_reg(uint16_t reg) {
 // === CAMERA CONFIG ===
 
 void camera_basic_init() {
-    camera_write_reg(0x3008, 0b10000010); // reset
+    camera_write_reg(OV5640_REG_SYSTEM_CTRL0, 0b10000010); // reset
     sleep_ms(10);
-    camera_write_reg(0x3008, 0b01000010); // power down
+    camera_write_reg(OV5640_REG_SYSTEM_CTRL0, 0b01000010); // power down
     // bit[7]:  software reset
     // bit[6]:  software power down
     // bit[5:0] debug mode (but bit[1] default = 1)
 
     camera_write_reg(0x3039, 0b10000000); // PLL bypass
 
-    camera_write_reg(0x302C, 0b11000010);
+    camera_write_reg(OV5640_REG_PAD_CONTROL, 0b11000010); 
+    // bit[7:6] output drive capability (11 -> 4x); 
+    // default: 0x02
 
-    camera_write_reg(0x3017, 0b11111111);
-    camera_write_reg(0x3018, 0b11111100);
+    camera_write_reg(OV5640_REG_PAD_OUTPUT_ENABLE01, 0b11111111); 
+    // enable/disable: FREX, VSYNC, HREF, PCLK, D9, D8, D7, D6
+    camera_write_reg(OV5640_REG_PAD_OUTPUT_ENABLE02, 0b11111100);
+    // enable/disable: D5, D4, D3, D2, D1, D0, GPIO1, GPIO0
 
-    camera_write_reg(0x4740, 0b00100010);
+    camera_write_reg(OV5640_REG_POLARITY_CTRL, 0b00100010);
     /*
     bit[7]: debug
     bit[6]: debug
@@ -138,13 +145,22 @@ void camera_basic_init() {
     bit[0]: VSYNC polarity  (0 -> active low; 1 -> active high)
     */
 
-    camera_write_reg(0x501F, 0x09);
+    camera_write_reg(OV5640_REG_FORMAT_MUX_CTRL, 0b00000001);
+    /*
+    bit[2:0] ->
+    000: ISP YUV422
+    001: ISP RGB
+    010: ISP dither
+    011: ISP RAW (DPC)
+    100: SNR RAW
+    101: ISP RAW (CIP)
+    */
 
-    camera_write_reg(0x503D, 0b10000000); // enable color bar
+    camera_write_reg(OV5640_PRE_ISP_TEST_SETTING, 0b10000000); // enable color bar
 
     // SET ALL THE REGISTERS
 
-    camera_write_reg(0x3008, 0b00000010); // normal operations
+    camera_write_reg(OV5640_REG_SYSTEM_CTRL0, 0b00000010); // normal operations
 }
 
 // === TESTS ===
