@@ -4,8 +4,9 @@
 // ============ REGISTER ADDRESSES ============
 
 // System Control
-
 #define OV5640_REG_SYSTEM_CTRL0         0x3008
+
+#define OV5640_REG_SC_PLL_CTRL5         0x3039
 
 // Chip ID
 #define OV5640_CHIP_ID_HIGH             0x300A
@@ -18,7 +19,18 @@
 #define OV5640_REG_PAD_OUTPUT_ENABLE01  0x3017
 #define OV5640_REG_PAD_OUTPUT_ENABLE02  0x3018
 
-// DVP Control 
+// PLL Control Registers
+#define OV5640_REG_PLL_CTRL0            0x3034
+#define OV5640_REG_PLL_CTRL1            0x3035
+#define OV5640_REG_PLL_CTRL2            0x3036
+#define OV5640_REG_PLL_CTRL3            0x3037
+#define OV5640_REG_PLL_BYPASS           0x3039
+#define OV5640_REG_PLL_CLK_SLCT         0x3103
+
+// Format Control
+#define OV5640_REG_FORMAT_CTRL          0x4300
+
+// DVP Control
 #define OV5640_REG_POLARITY_CTRL        0x4740
 
 // ISP Top Control

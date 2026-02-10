@@ -27,9 +27,22 @@
 #define CAM_RST         14
 #define CAM_PWDN        15
 
-
-
 // === INITS ===
+
+void init_capture_pins() {
+    // Data pins D2-D9 (GPIO 7-14) as inputs
+    for (int pin = CAM_D2; pin <= CAM_D9; pin++) {
+        gpio_init(pin);
+        gpio_set_dir(pin, GPIO_IN);
+    }
+    
+    // Control pins as inputs  
+    gpio_init(CAM_VSYNC); gpio_set_dir(CAM_VSYNC, GPIO_IN);
+    gpio_init(CAM_HREF);  gpio_set_dir(CAM_HREF, GPIO_IN);
+    gpio_init(CAM_PCLK);  gpio_set_dir(CAM_PCLK, GPIO_IN);
+    
+    printf("Capture pins ready!\n");
+}
 
 void init_xclk() {
     gpio_set_function(CAM_XCLK, GPIO_FUNC_PWM);
@@ -77,21 +90,6 @@ void camera_hard_reset(void) {
     sleep_ms(20);  // let it stabilize
 }
 
-void init_capture_pins() {
-    // Data pins D2-D9 (GPIO 7-14) as inputs
-    for (int pin = CAM_D2; pin <= CAM_D9; pin++) {
-        gpio_init(pin);
-        gpio_set_dir(pin, GPIO_IN);
-    }
-    
-    // Control pins as inputs  
-    gpio_init(CAM_VSYNC); gpio_set_dir(CAM_VSYNC, GPIO_IN);
-    gpio_init(CAM_HREF);  gpio_set_dir(CAM_HREF, GPIO_IN);
-    gpio_init(CAM_PCLK);  gpio_set_dir(CAM_PCLK, GPIO_IN);
-    
-    printf("Capture pins ready!\n");
-}
-
 // === READ & WRITE REGISTERS ===
 
 void camera_write_reg(uint16_t reg, uint8_t value) {
@@ -115,7 +113,30 @@ uint8_t camera_read_reg(uint16_t reg) {
 
 // === CAMERA CONFIG ===
 
-void camera_basic_init() {
+void camera_set_format_yuv422() {
+    camera_write_reg(OV5640_REG_FORMAT_CTRL, 0x30);
+    /*
+    bit[7:4] ->
+    0x0: RAW
+    0x3: YUV422
+    0x6: RGB565
+    */
+    camera_write_reg(OV5640_REG_FORMAT_MUX_CTRL, 0b00000000);
+    /*
+    bit[2:0] ->
+    000: ISP YUV422
+    001: ISP RGB
+    010: ISP dither
+    011: ISP RAW (DPC)
+    100: SNR RAW
+    101: ISP RAW (CIP)
+    */
+    
+    printf("Format set to YUV422!\n");
+}
+
+void camera_walking_bit_init() {
+    camera_write_reg(OV5640_REG_PLL_CLK_SLCT, 0b00010001); // system clock from pad, bit[1]
     camera_write_reg(OV5640_REG_SYSTEM_CTRL0, 0b10000010); // reset
     sleep_ms(10);
     camera_write_reg(OV5640_REG_SYSTEM_CTRL0, 0b01000010); // power down
@@ -123,7 +144,9 @@ void camera_basic_init() {
     // bit[6]:  software power down
     // bit[5:0] debug mode (but bit[1] default = 1)
 
-    camera_write_reg(0x3039, 0b10000000); // PLL bypass
+    // camera_write_reg(OV5640_REG_SC_PLL_CTRL5, 0b10000000); // PLL bypass
+
+    camera_write_reg(OV5640_REG_PLL_CLK_SLCT, 0b00000011); // system clock from pll, bit[1]
 
     camera_write_reg(OV5640_REG_PAD_CONTROL, 0b11000010); 
     // bit[7:6] output drive capability (11 -> 4x); 
@@ -144,19 +167,6 @@ void camera_basic_init() {
     bit[1]: HREF polarity   (0 -> active low; 1 -> active high)
     bit[0]: VSYNC polarity  (0 -> active low; 1 -> active high)
     */
-
-    camera_write_reg(OV5640_REG_FORMAT_MUX_CTRL, 0b00000001);
-    /*
-    bit[2:0] ->
-    000: ISP YUV422
-    001: ISP RGB
-    010: ISP dither
-    011: ISP RAW (DPC)
-    100: SNR RAW
-    101: ISP RAW (CIP)
-    */
-
-    camera_write_reg(OV5640_PRE_ISP_TEST_SETTING, 0b10000000); // enable color bar
 
     // SET ALL THE REGISTERS
 
@@ -238,6 +248,16 @@ void test_capture_single_line() {
     printf("\n");
 }
 
+void test_flash() {
+    camera_write_reg(0x3016,0X02);
+	camera_write_reg(0x301C,0X02); 
+    camera_write_reg(0X3019,0X02);
+    sleep_ms(50);
+    camera_write_reg(0x3016,0X02);
+	camera_write_reg(0x301C,0X02); 
+    camera_write_reg(0X3019,0X00);
+}
+
 // === MAIN ===
 
 int main() {
@@ -252,10 +272,6 @@ int main() {
     camera_hard_reset();
 
     init_i2c();
-
-    camera_basic_init();
-    init_capture_pins();
-    test_capture_single_line();
 
     printf("All done! Looping forever...\n");
     while (1) {
