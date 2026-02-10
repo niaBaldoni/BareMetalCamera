@@ -1,0 +1,41 @@
+name: Build RP2040 firmware
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          ninja-build \
+          gcc-arm-none-eabi \
+          libnewlib-arm-none-eabi \
+          libstdc++-arm-none-eabi-newlib
+
+    - name: Clone Pico SDK
+      run: |
+        git clone --depth=1 https://github.com/raspberrypi/pico-sdk.git
+        cd pico-sdk
+        git submodule update --init
+
+    - name: Configure
+      env:
+        PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
+      run: |
+        cmake -S . -B build -G Ninja
+
+    - name: Build
+      run: |
+        cmake --build build
