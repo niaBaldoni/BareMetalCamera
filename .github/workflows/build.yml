@@ -34,7 +34,7 @@ jobs:
       env:
         PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
       run: |
-        cmake -S . -B build -G Ninja
+        cmake -S BareMetalCamera -B build -G Ninja
 
     - name: Build
       run: |
