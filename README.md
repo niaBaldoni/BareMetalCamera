@@ -1,5 +1,7 @@
 # BareMetalCamera
 
+![Build](https://github.com/niaBaldoni/BareMetalCamera/actions/workflows/build.yml/badge.svg)
+
 BareMetalCamera is a from-scratch OV5640 bring-up on the RP2040 using PIO and DMA, with no vendor camera drivers. It recreates a DCMI-style parallel camera interface entirely in software.
 
 ## About This Project
@@ -80,3 +82,4 @@ Higher-level abstractions, advanced image tuning, and broader hardware support a
 ### Pico SDK
 - [Raspberry Pi Pico SDK Documentation](https://www.raspberrypi.com/documentation/microcontrollers/c_sdk.html)
 - [PIO (Programmable I/O) Guide](https://www.raspberrypi.com/documentation/microcontrollers/c_sdk.html#pio)
+
