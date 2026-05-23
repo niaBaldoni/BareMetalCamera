@@ -27,6 +27,29 @@
 #define OV5640_REG_PLL_BYPASS           0x3039
 #define OV5640_REG_PLL_CLK_SLCT         0x3103
 
+// Timing Control
+#define OV5640_REG_X_START_MSB          0x3800
+#define OV5640_REG_X_START_LSB          0x3801
+#define OV5640_REG_Y_START_MSB          0x3802
+#define OV5640_REG_Y_START_LSB          0x3803
+#define OV5640_REG_X_END_MSB            0x3804
+#define OV5640_REG_X_END_LSB            0x3805
+#define OV5640_REG_Y_END_MSB            0x3806
+#define OV5640_REG_Y_END_LSB            0x3807
+
+#define OV5640_REG_WIDTH_MSB            0x3808
+#define OV5640_REG_WIDTH_LSB            0x3809
+#define OV5640_REG_HEIGHT_MSB           0x380A
+#define OV5640_REG_HEIGHT_LSB           0x380B
+
+#define OV5640_REG_HTS_MSB              0x380C
+#define OV5640_REG_HTS_LSB              0x380D
+#define OV5640_REG_VTS_MSB              0x380E
+#define OV5640_REG_VTS_LSB              0x380F
+
+#define OV5640_REG_X_INC                0x3814
+#define OV5640_REG_Y_INC                0x3815
+
 // Format Control
 #define OV5640_REG_FORMAT_CTRL          0x4300
 
@@ -41,7 +64,9 @@
 #define OV5640_REG_FORMAT_MUX_CTRL      0x501F
 
 // 8 Color Bar Test
-#define OV5640_PRE_ISP_TEST_SETTING     0x503D
+#define OV5640_REG_8CB_TEST_SETTING     0x503D
 
+// Walking Bit Test
+#define OV5640_REG_WB_TEST_SETTING      0X4741
 
 #endif // OV5640_REGS_H

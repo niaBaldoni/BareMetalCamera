@@ -135,6 +135,31 @@ void camera_set_format_yuv422() {
     printf("Format set to YUV422!\n");
 }
 
+void camera_set_qvga() {
+    // Use full sensor array
+    camera_write_reg(OV5640_REG_X_START_MSB, 0x00); camera_write_reg(OV5640_REG_X_START_LSB, 0x00); // X start = 0
+    camera_write_reg(OV5640_REG_Y_START_MSB, 0x00); camera_write_reg(OV5640_REG_Y_START_LSB, 0x00); // Y start = 0
+    camera_write_reg(OV5640_REG_X_END_MSB, 0x0A); camera_write_reg(OV5640_REG_X_END_LSB, 0x3F); // X end = 2623
+    camera_write_reg(OV5640_REG_Y_END_MSB, 0x07); camera_write_reg(OV5640_REG_Y_END_LSB, 0x9F); // Y end = 1951
+    
+    // Output size QVGA -> 320x240
+    camera_write_reg(OV5640_REG_WIDTH_MSB, 0x01); camera_write_reg(OV5640_REG_WIDTH_LSB, 0x40); // Width = 320
+    camera_write_reg(OV5640_REG_HEIGHT_MSB, 0x00); camera_write_reg(OV5640_REG_HEIGHT_LSB, 0xF0); // Height = 240
+    
+    // Timing
+    camera_write_reg(OV5640_REG_HTS_MSB, 0x07); camera_write_reg(OV5640_REG_HTS_LSB, 0x68); // HTS
+    camera_write_reg(OV5640_REG_VTS_MSB, 0x03); camera_write_reg(OV5640_REG_VTS_LSB, 0xD8); // VTS
+    
+    // Subsampling to scale down
+    camera_write_reg(OV5640_REG_X_INC, 0x31); // X increment (skip pixels)
+    camera_write_reg(OV5640_REG_Y_INC, 0x31); // Y increment (skip lines)
+    
+    // Enable scaling
+    camera_write_reg(OV5640_REG_ISP_CONTROL_01, 0x23); // Enable scale + color matrix + AWB
+    
+    printf("Resolution set to QVGA!\n");
+}
+
 void camera_walking_bit_init() {
     camera_write_reg(OV5640_REG_PLL_CLK_SLCT, 0b00010001); // system clock from pad, bit[1]
     camera_write_reg(OV5640_REG_SYSTEM_CTRL0, 0b10000010); // reset
@@ -272,6 +297,8 @@ int main() {
     camera_hard_reset();
 
     init_i2c();
+
+    test_chip_id();
 
     printf("All done! Looping forever...\n");
     while (1) {
